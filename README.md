@@ -34,7 +34,7 @@ This will start the backend on localhost:9090.
 Check if it works:
 
     ```$ curl http://localhost:9090/health```
-    ```{"status":"UP"}```
+       {"status":"UP"}```
 
 3. Connect running backend to Label Studio:
 
