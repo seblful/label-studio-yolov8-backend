@@ -25,7 +25,7 @@ This project contains an ML backend for classifying pills in Label Studio. It us
 
     ```git clone https://github.com/seblful/label-studio-yolov8-backend.git```
 
-2. Paste you Label Studio API key im ```model.py```
+2. Paste you Label Studio API key in ```model.py```
 
 3. To use this backend, you'll need to have Docker and docker-compose installed. Then, run the following command to start the backend:
 
