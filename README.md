@@ -10,7 +10,8 @@ This project contains an ML backend for classifying pills in Label Studio. It us
 
 - **docker-compose.yml**: The docker-compose file for running the backend.
 
-- **model.py**: The Python code for the ML backend model.
+- **model.py**: The Python code for the ML backend model for image segmentation (PolygonLabels).
+- **model_det.py**: The Python code for the ML backend model for image detection (RectangleLabels) (rename it to `model.py` to use).
 
 - **best.pt**: The pre-trained YOLOv8 model for pill classification.
 
@@ -32,19 +33,23 @@ This project contains an ML backend for classifying pills in Label Studio. It us
 
    `docker-compose up`
 
-This will start the backend on localhost:9090.
 
-Check if it works:
+&emsp; &emsp;This will start the backend on localhost:9090.
 
-`$ curl http://localhost:9090/health`
+&emsp; &emsp;Check if it works:
 
-`{"status":"UP"}`
+<pre>
+    $ curl http://localhost:9090/health
+    {"status":"UP"}
+</pre>
+
+
 
 4. Connect running backend to Label Studio:
 
    `label-studio start --init new_project --ml-backends http://localhost:9090`
 
-Or write it manually in Settings - Machine - Add Model
+&emsp; &emsp;Or write it manually in Settings - Machine - Add Model
 
 5. Start the labeling process.
 
