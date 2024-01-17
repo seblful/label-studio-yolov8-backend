@@ -1,6 +1,6 @@
 # YOLOv8 ML backend for the Label Studio
 
-This project contains an ML backend for classifying pills in Label Studio. It uses the YOLOv8 model and can segment and classify pills as capsules or tablets.
+This project contains an ML backend for segmenting and detecting pills in Label Studio. It uses the YOLOv8 model and can segment or detect and classify pills as capsules or tablets.
 
 ## Project Structure
 
@@ -49,7 +49,7 @@ This project contains an ML backend for classifying pills in Label Studio. It us
 
    `label-studio start --init new_project --ml-backends http://localhost:9090`
 
-&emsp; &emsp;Or write it manually in Settings - Machine - Add Model
+&emsp; &emsp;Or write it manually in Settings - Machine - Add Model.
 
 5. Start the labeling process.
 
