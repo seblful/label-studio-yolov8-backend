@@ -1,5 +1,9 @@
 logs
 data
 images
+
+best_seg.pt
+best_det.pt
+
 __pycache__
 .ipynb_checkpoints
