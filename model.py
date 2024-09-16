@@ -61,8 +61,68 @@ class YOLO(LabelStudioMLBase):
             predictions = self.predict_det(tasks)
         else:
             predictions = self.predict_seg(tasks)
-        print('.' * 20, "Returned predictions", '.' * 20)
+        print('.' * 20, "Returned prediction", '.' * 20)
         return predictions
+
+    def predict_det(self,
+                    tasks: List[Dict]) -> ModelResponse:
+        pass
+
+    def predict_seg(self,
+                    tasks: List[Dict]) -> ModelResponse:
+        # Create blank list with results
+        results = []
+
+        # Create variable to calcualte scores
+        score = 0
+        counter = 0
+
+        for task in tasks:
+            # Load image
+            image = self.load_image(task=task)
+
+            # Height and width of image
+            image_width, image_height = image.size
+
+            # Getting prediction using model
+            model_prediction = self.model.predict(image)
+
+            # Getting mask segments, boxes from model prediction
+            for pred in model_prediction:
+                for i, (box, segm) in enumerate(zip(pred.boxes, pred.masks.xy)):
+
+                    # 2D array with poligon points
+                    points = segm / \
+                        np.array([image_width, image_height]) * 100
+                    points = points.tolist()
+
+                    # Label
+                    labels = [self.labels[int(box.cls.item())]]
+
+                    # Regions and predictions
+                    result = {"from_name": "label",
+                              "to_name": "image",
+                              "id": str(i),
+                              "type": "polygonlabels",
+                              "score": box.conf.item(),
+                              "original_width": image_width,
+                              "original_height": image_height,
+                              "image_rotation": 0,
+                              "value": {"points": points,
+                                        "polygonlabels": labels}}
+
+                    # Append prediction to predictions
+                    results.append(result)
+
+                    # Add score
+                    score += box.conf.item()
+                    counter += 1
+
+        predictions = [{"result": results,
+                       "score": score / counter,
+                        "model_version": self.model_version}]
+
+        return ModelResponse(predictions=predictions)
 
     def fit(self, event, data, **kwargs):
         raise NotImplementedError("Training is not implemented yet")
