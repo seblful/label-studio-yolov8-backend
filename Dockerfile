@@ -1,27 +1,39 @@
-FROM python:3.10
-
-WORKDIR /tmp
-COPY requirements.txt .
-
-ENV PYTHONUNBUFFERED=True \
-    PORT=${PORT:-9090} \
-    PIP_CACHE_DIR=/.cache
-
-RUN apt-get update && apt-get install ffmpeg libsm6 libxext6  -y
-
-RUN pip install --upgrade pip
-
-RUN --mount=type=cache,target=$PIP_CACHE_DIR \
-    pip install -r requirements.txt
-
-
-COPY uwsgi.ini /etc/uwsgi/
-COPY supervisord.conf /etc/supervisor/conf.d/
+FROM pytorch/pytorch:2.1.2-cuda12.1-cudnn8-runtime
+ARG DEBIAN_FRONTEND=noninteractive
+ARG TEST_ENV
 
 WORKDIR /app
 
-COPY * /app/
+RUN conda update conda -y
 
-EXPOSE 9090
+RUN --mount=type=cache,target="/var/cache/apt",sharing=locked \
+    --mount=type=cache,target="/var/lib/apt/lists",sharing=locked \
+    apt-get -y update \
+    && apt-get install -y git \
+    && apt-get install -y wget \
+    && apt-get install -y g++ freeglut3-dev build-essential libx11-dev \
+    libxmu-dev libxi-dev libglu1-mesa libglu1-mesa-dev libfreeimage-dev \
+    && apt-get -y install ffmpeg libsm6 libxext6 libffi-dev python3-dev python3-pip gcc
 
-CMD ["/usr/local/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PIP_CACHE_DIR=/.cache \
+    PORT=9090 \
+    WORKERS=2 \
+    THREADS=4 \
+    CUDA_HOME=/usr/local/cuda
+
+RUN conda install -c "nvidia/label/cuda-12.1.1" cuda -y
+ENV CUDA_HOME=/opt/conda \
+    TORCH_CUDA_ARCH_LIST="6.0;6.1;7.0;7.5;8.0;8.6+PTX;8.9;9.0"
+
+# install model requirements
+COPY requirements.txt .
+RUN --mount=type=cache,target=${PIP_CACHE_DIR},sharing=locked \
+    pip3 install -r requirements.txt
+
+WORKDIR /app
+
+COPY . ./
+
+CMD ["/app/start.sh"]
