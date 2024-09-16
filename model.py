@@ -1,110 +1,68 @@
+from typing import List, Dict, Optional
+
 import os
-import random
-import requests
-import socket
-from PIL import Image
-from io import BytesIO
+
+from PIL import Image, ImageOps
 
 import numpy as np
-from ultralytics import YOLO
+import ultralytics
 
 from label_studio_ml.model import LabelStudioMLBase
-from label_studio_ml.utils import get_single_tag_keys, get_local_path
+from label_studio_ml.response import ModelResponse
+from label_studio_ml.utils import get_single_tag_keys
+from label_studio_sdk._extensions.label_studio_tools.core.utils.io import get_local_path
 
 
-# hostname = socket.gethostname()
-# LS_URL = socket.gethostbyname(hostname)
-# print("Hostname: ", hostname)
-# print("IP Address: ", ip_address)
+class YOLO(LabelStudioMLBase):
+    """Label Studio ML Backend based on Ultralytics YOLO"""
 
-LS_URL = "http://192.168.100.3:8080"
-LS_API_TOKEN = "201a66049e8438c587125d8163d2d60538f067d5"
+    def __init__(self,
+                 **kwargs) -> None:
+        super(YOLO, self).__init__(**kwargs)
 
+        # Task type
+        self.task_types = ["detection", "segmentation"]
+        self.task_type = os.getenv("TASK_TYPE")
+        print(f"Task type is {self.task_type}.")
 
-# Initialize class inhereted from LabelStudioMLBase
-class YOLOv8Model(LabelStudioMLBase):
-    def __init__(self, **kwargs):
-        # Call base class constructor
-        super(YOLOv8Model, self).__init__(**kwargs)
+        # Model and labels
+        self.model = ultralytics.YOLO("models/best_seg.pt")
+        self.labels = self.model.names
 
-        # Initialize self variables
-        self.from_name, self.to_name, self.value, self.classes = get_single_tag_keys(
-            self.parsed_label_config, 'PolygonLabels', 'Image')
-        self.labels = ['capsules', 'tablets']
-        # Load model
-        self.model = YOLO("best_seg.pt")
+    def setup(self) -> None:
+        """Configure any parameters of your model here"""
+        self.set("model_version", "yolov8m-seg")
 
-    # Function to predict
-    def predict(self, tasks, **kwargs):
-        """
-        Returns the list of predictions based on input list of tasks for 1 image
-        """
-        task = tasks[0]
+    def load_image(self,
+                   task: Dict) -> Image.Image:
+        # Get image path and task id
+        image_path = task.get("data").get("image")
+        task_id = task.get("id")
 
-        # Getting URL of the image
-        image_url = task['data'][self.value]
-        full_url = LS_URL + image_url
-        print("FULL URL: ", full_url)
+        # Extract local image path
+        file_path = self.get_local_path(image_path,
+                                        task_id=task_id)
 
-        # Header to get request
-        header = {
-            "Authorization": "Token " + LS_API_TOKEN}
+        # Open image
+        image = Image.open(file_path)
+        image = ImageOps.exif_transpose(image)
 
-        # Getting URL and loading image
-        image = Image.open(BytesIO(requests.get(
-            full_url, headers=header).content))
-        # Height and width of image
-        original_width, original_height = image.size
+        return image
 
-        # Creating list for predictions and variable for scores
-        predictions = []
-        score = 0
-        i = 0
+    def predict(self,
+                tasks: List[Dict],
+                context: Optional[Dict] = None,
+                **kwargs) -> ModelResponse:
+        assert self.task_type in self.task_types, \
+            f"Task type must be one \
+                of {self.task_types}, set TASK_TYPE in your .env file."
 
-        # Getting prediction using model
-        results = self.model.predict(image)
+        if self.task_type == "detection":
+            predictions = self.predict_det(tasks)
+        else:
+            predictions = self.predict_seg(tasks)
+        print('.' * 20, "Returned predictions", '.' * 20)
+        return predictions
 
-        # Getting mask segments, boxes from model prediction
-        for result in results:
-            for i, (box, segm) in enumerate(zip(result.boxes, result.masks.xy)):
-
-                # 2D array with poligon points
-                polygon_points = segm / \
-                    np.array([original_width, original_height]) * 100
-
-                polygon_points = polygon_points.tolist()
-
-                # Adding dict to prediction
-                predictions.append({
-                    "from_name": self.from_name,
-                    "to_name": self.to_name,
-                    "id": str(i),
-                    "type": "polygonlabels",
-                    "score": box.conf.item(),
-                    "original_width": original_width,
-                    "original_height": original_height,
-                    "image_rotation": 0,
-                    "value": {
-                        "points": polygon_points,
-                        "polygonlabels": [self.labels[int(box.cls.item())]]
-                    }})
-
-                # Calculating score
-                score += box.conf.item()
-
-        print(f"Prediction Score is {score:.3f}.")
-
-        # Dict with final dicts with predictions
-        final_prediction = [{
-            "result": predictions,
-            "score": score / (i + 1),
-            "model_version": "v8s"
-        }]
-
-        return final_prediction
-
-    def fit(self, completions, workdir=None, **kwargs):
-        """ 
-        Dummy function to train model
-        """
-        return {'random': random.randint(1, 10)}
+    def fit(self, event, data, **kwargs):
+        raise NotImplementedError("Training is not implemented yet")
