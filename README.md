@@ -1,57 +1,83 @@
 # YOLOv8 ML backend for the Label Studio
 
-This project contains an ML backend for segmenting and detecting pills in Label Studio. It uses the YOLOv8 model and can segment or detect and classify pills as capsules or tablets.
+
+YOLOv8 interactive ML-assisted labeling, facilitating faster 
+annotation for **image detection**, ***instance* image segmentation**.
+
+Tested against Label Studio 1.13.1.
 
 ## Project Structure
-
-### The repository contains the following files and directories:
 
 - **Dockerfile**: The Dockerfile for building the backend container.
 
 - **docker-compose.yml**: The docker-compose file for running the backend.
 
-- **model.py**: The Python code for the ML backend model for image segmentation (PolygonLabels).
-- **model_det.py**: The Python code for the ML backend model for image detection (RectangleLabels) (rename it to `model.py` to use).
+- **_wsgi.py**: WSGI app initializer.
 
-- **best.pt**: The pre-trained YOLOv8 model for pill classification.
+- **start.sh**: bash script to start the whole process.
 
-- **uwsgi.ini**: The uWSGI configuration file for running the backend.
-
-- **supervisord.conf**: The supervisord configuration file for running the backend processes.
+- **model.py**: The Python code for the ML backend model.
 
 - **requirements.txt**: The list of Python dependencies for the backend.
 
-## Getting Started
+## Setup process
 
-1. Clone the Label Studio Machine Learning Backend git repository. From the command line, run the following:
-
-   `git clone https://github.com/seblful/label-studio-yolov8-backend.git`
-
-2. Paste you Label Studio API key in `model.py`
-
-3. To use this backend, you'll need to have Docker and docker-compose installed. Then, run the following command to start the backend:
-
-   `docker-compose up`
+Before you begin:
+* Ensure git is installed
+* Ensure Docker Compose is installed.
 
 
-&emsp; &emsp;This will start the backend on localhost:9090.
+### 1. Install Label Studio
 
-&emsp; &emsp;Check if it works:
-
-<pre>
-    $ curl http://localhost:9090/health
-    {"status":"UP"}
-</pre>
+Launch Label Studio. You can follow the guide from the [official documentation](https://labelstud.io/guide/install.html) or use the following commands:
 
 
+If you're using local file serving, be sure to [get a copy of the API token](https://labelstud.io/guide/user_account#Access-token) from
+Label Studio to connect the model.
 
-4. Connect running backend to Label Studio:
+### 2. Create a Label Studio project
 
-   `label-studio start --init new_project --ml-backends http://localhost:9090`
+Create a new project.
 
-&emsp; &emsp;Or write it manually in Settings - Machine - Add Model.
+In the project **Settings** set up the **Labeling Interface** for **image detection** (RectangleLabels) or **image segmentation** (PolygonLabels). 
 
-5. Start the labeling process.
+### 3. Install label-studio-yolov8-backend
+
+Download the Label Studio YOLOv8 backend repository.
+   ```
+   git clone https://github.com/seblful/label-studio-yolov8-backend.git
+   cd label-studio-yolov8-backend
+   ```
+
+Configure parameters in `.env` file:
+
+   ```
+   LABEL_STUDIO_URL=<IPv4 Address> (check your ipconfig)
+   LABEL_STUDIO_API_KEY=<Label Studio API token>
+   TASK_TYPE=<segmentation> or <detection>
+   ```
+
+### 4. Start the servers
+
+   ```
+   docker compose up
+   ```
+
+### 5. Upload tasks
+
+   Upload images directly to Label Studio using the Label Studio interface.
+
+
+### 6. Add model in project settings
+
+From the project settings, select the **Model** page and click [**Connect Model**](https://labelstud.io/guide/ml#Connect-the-model-to-Label-Studio).
+
+   Add the URL `http://locallhost:9090` and save the model as an ML backend.
+
+### 7. Label in interactive mode
+
+To use this functionality, activate **Auto-Annotation** for drawing boxes.
+
 
 ## Training
 
