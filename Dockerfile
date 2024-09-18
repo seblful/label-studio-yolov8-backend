@@ -1,33 +1,29 @@
-FROM pytorch/pytorch:2.1.2-cuda12.1-cudnn8-runtime
-ARG DEBIAN_FRONTEND=noninteractive
-ARG TEST_ENV
+FROM pytorch/pytorch:2.3.1-cuda12.1-cudnn8-runtime
 
-WORKDIR /app
-
-RUN conda update conda -y
-
-RUN --mount=type=cache,target="/var/cache/apt",sharing=locked \
-    --mount=type=cache,target="/var/lib/apt/lists",sharing=locked \
-    apt-get -y update \
-    && apt-get install -y git \
-    && apt-get install -y wget \
-    && apt-get install -y g++ freeglut3-dev build-essential libx11-dev \
-    libxmu-dev libxi-dev libglu1-mesa libglu1-mesa-dev libfreeimage-dev \
-    && apt-get -y install ffmpeg libsm6 libxext6 libffi-dev python3-dev python3-pip gcc
-
+# Set environment variables
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
     PIP_CACHE_DIR=/.cache \
-    PORT=9090 \
-    WORKERS=2 \
-    THREADS=4 \
-    CUDA_HOME=/usr/local/cuda
+    PIP_BREAK_SYSTEM_PACKAGES=1 \
+    MKL_THREADING_LAYER=GNU \
+    PORT=9090
 
-RUN conda install -c "nvidia/label/cuda-12.1.1" cuda -y
-ENV CUDA_HOME=/opt/conda \
-    TORCH_CUDA_ARCH_LIST="6.0;6.1;7.0;7.5;8.0;8.6+PTX;8.9;9.0"
+# Downloads to user config dir
+ADD https://github.com/ultralytics/assets/releases/download/v0.0.0/Arial.ttf \
+    https://github.com/ultralytics/assets/releases/download/v0.0.0/Arial.Unicode.ttf \
+    /root/.config/Ultralytics/
 
-# install model requirements
+# Install linux packages
+RUN apt update \
+    && apt install --no-install-recommends -y gcc git zip unzip wget curl htop libgl1 libglib2.0-0 libpython3-dev gnupg g++ libusb-1.0-0 libsm6
+
+RUN apt upgrade --no-install-recommends -y openssl tar
+
+# Create working directory
+WORKDIR /app
+
+# Install pip packages
+RUN python3 -m pip install --upgrade pip wheel
 COPY requirements.txt .
 RUN --mount=type=cache,target=${PIP_CACHE_DIR},sharing=locked \
     pip3 install -r requirements.txt
