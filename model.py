@@ -23,6 +23,9 @@ class YOLO(LabelStudioMLBase):
         # Task type
         self.task_types = ["detection", "segmentation"]
         self.task_type = os.getenv("TASK_TYPE")
+        assert self.task_type in self.task_types, \
+            f"Task type must be one \
+                of {self.task_types}, set TASK_TYPE in your .env file."
         print(f"Task type is {self.task_type}.")
 
         # From name, to name
@@ -35,7 +38,6 @@ class YOLO(LabelStudioMLBase):
         self.labels = self.model.names
 
     def setup(self) -> None:
-        """Configure any parameters of your model here"""
         self.set("model_version", "yolov8m-seg")
 
     def load_image(self,
@@ -56,21 +58,15 @@ class YOLO(LabelStudioMLBase):
 
     def predict(self,
                 tasks: List[Dict],
-                context: Optional[Dict] = None,
                 **kwargs) -> ModelResponse:
-        assert self.task_type in self.task_types, \
-            f"Task type must be one \
-                of {self.task_types}, set TASK_TYPE in your .env file."
-
         if self.task_type == "detection":
-            predictions = self.predict_det(tasks)
+            predictions = self.predict_det(tasks, **kwargs)
         else:
-            predictions = self.predict_seg(tasks)
-        print('.' * 20, "Returned prediction", '.' * 20)
+            predictions = self.predict_seg(tasks, **kwargs)
+
         return predictions
 
-    def predict_det(self,
-                    tasks: List[Dict]) -> ModelResponse:
+    def predict_det(self, tasks: List[Dict], **kwargs) -> ModelResponse:
         # Create blank list with results
         results = []
 
@@ -131,8 +127,7 @@ class YOLO(LabelStudioMLBase):
 
         return ModelResponse(predictions=predictions)
 
-    def predict_seg(self,
-                    tasks: List[Dict]) -> ModelResponse:
+    def predict_seg(self, tasks: List[Dict], **kwargs) -> ModelResponse:
         # Create blank list with results
         results = []
 
