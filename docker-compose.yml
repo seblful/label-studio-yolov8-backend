@@ -15,9 +15,13 @@ services:
 
       # Specify the Label Studio URL and API key to access
       # Determine the actual IP using 'ifconfig' (Linux/Mac) or 'ipconfig' (Windows).
-      - LABEL_STUDIO_URL=${LABEL_STUDIO_URL}
-      - LABEL_STUDIO_API_KEY=${LABEL_STUDIO_API_KEY}
-      - TASK_TYPE=${TASK_TYPE}
+
+      # LABEL_STUDIO_URL=<IPv4 Address> (check your ipconfig)
+      # LABEL_STUDIO_API_KEY=<Label Studio API token>
+      # TASK_TYPE=<segmentation> or <detection>
+      - LABEL_STUDIO_URL=http://host.docker.internal:8080
+      - LABEL_STUDIO_API_KEY=1cbf62539c32cea6ec862d97643f8651fc668c6f
+      - TASK_TYPE=detection
 
     ports:
       - "9090:9090"
