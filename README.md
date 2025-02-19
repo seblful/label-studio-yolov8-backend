@@ -9,6 +9,7 @@ A updated version of YOLO11 backend for Label Studio, forked from [seblful/label
 This backend provides ML-assisted labeling capabilities to accelerate your annotation workflow, supporting both **object detection** and **instance segmentation** tasks.
 
 ## 📦 Changes
+- update the Dockerfile to avoid `app/start.sh` not found error
 - update the Ultralytics to the latest version, supporting YOLO11 and earlier models
 - a clearer and verified startup instruction
 
