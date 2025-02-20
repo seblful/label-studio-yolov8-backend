@@ -41,7 +41,6 @@ class YOLO(LabelStudioMLBase):
         self.set("model_version", "yolov8m-seg")
 
     def load_image(self,
-                   
                    task: Dict) -> Image.Image:
         # Get image path and task id
         image_path = task.get("data").get("image")
