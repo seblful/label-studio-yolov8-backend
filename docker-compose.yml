@@ -4,19 +4,19 @@ services:
     build:
       context: .
     environment:
-      # specify these parameters if you want to use basic auth for the model server
-      - BASIC_AUTH_USER=
-      - BASIC_AUTH_PASS=
-      # set the log level for the model server
-      - LOG_LEVEL=DEBUG
-      # specify the model directory (likely you don't need to change this)
-      - MODEL_DIR=./models
-      - PYTHONPATH=/app
+      # Authentification
+      - BASIC_AUTH_USER=${BASIC_AUTH_USER}
+      - BASIC_AUTH_PASS=${BASIC_AUTH_PASS}
 
-      # Specify the Label Studio URL and API key to access
-      # Determine the actual IP using 'ifconfig' (Linux/Mac) or 'ipconfig' (Windows).
+      # Log level
+      - LOG_LEVEL=${LOG_LEVEL}
 
-      - LABEL_STUDIO_URL=http://host.docker.internal:8080
+      # Paths
+      - PYTHONPATH=${PYTHONPATH}
+      - MODEL_DIR=${MODEL_DIR}
+      - MODEL_FILENAME=${MODEL_FILENAME}
+
+      - LABEL_STUDIO_URL=http://host.docker.internal:${PORT}
       - LABEL_STUDIO_API_KEY=${LABEL_STUDIO_API_KEY}
       - TASK_TYPE=${TASK_TYPE}
 
