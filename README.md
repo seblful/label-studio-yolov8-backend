@@ -28,68 +28,62 @@ This backend provides ML-assisted labeling capabilities to accelerate your annot
 2. **Create and prepare your model directory:**
    
     ```bash
-    mkdir model
-    cp /path/to/your/model.pt model/
-    mv model/your_model.pt model/best.pt
+    mkdir models
+    cp /path/to/your/model.pt models/
     ```
 
 3. **Edit `.env` with your settings:**
    
     ```yaml
-    - LABEL_STUDIO_URL=http://host.docker.internal:${PORT}
-    - LABEL_STUDIO_API_KEY=<your_api_key>
-    - TASK_TYPE=<detection> or <segmentation>
+    BASIC_AUTH_USER=  # Optional
+    BASIC_AUTH_PASS=  # Optional
+    LOG_LEVEL=DEBUG
+
+    MODEL_FILENAME=model.pt
+
+    PORT=8080
+
+    LABEL_STUDIO_API_KEY= # API key from LS
+    TASK_TYPE=segmentation # segmentation or detection
     ```
 
-    > **Important Notes:**
-    > - Default LABEL_STUDIO_URL is `http://host.docker.internal:8080`
-    > - Get IP using 'ifconfig' (Linux/Mac) or 'ipconfig' (Windows)
-    > - ⚠️ Never use `localhost` as the container is isolated from the host
-    > - Get your API_KEY from: Label Studio -> Account Settings -> Access Token
 
-
-4. **Deploy using the following commands:**
+4. **Deploy using the following command:**
    
     ```bash
-    docker pull pytorch/pytorch:2.3.0-cuda12.1-cudnn8-runtime
-    docker compose build
     docker compose up
     ```
 
-5. **Add model in project settings:**
+5. **Add the model in project settings:**
 
     From the project settings, select the **Model** page and click [**Connect Model**](https://labelstud.io/guide/ml#Connect-the-model-to-Label-Studio).
     
-    Add the URL `http://locallhost:{PORT}` and save the model as an ML backend.
+    Add the URL `http://locallhost:9090` and save the model as an ML backend.
 
-   ![model_connected](https://github.com/user-attachments/assets/2f240905-f093-42c1-bad8-7b90efc4fcab)
+   ![Connect Model](https://github.com/seblful/label-studio-yolo-backend/raw/main/assets/images/connect_model.png)
+   ![Connected model](https://github.com/seblful/label-studio-yolo-backend/raw/main/assets/images/connected_model.png)
 
 
 6. **Label in interactive mode**
 
     To use this functionality, activate **Auto-Annotation**.
 
+  ![Example annotation](https://github.com/seblful/label-studio-yolo-backend/raw/main/assets/images/annotation.png)
 
-  ### 🇨🇳 For Users in China
+  ### For users with internet restrictions:
   
-  To ensure smooth deployment in regions with internet restrictions:
-  
-  1. Configure Docker daemon with proxy:
+  Configure Docker daemon with proxy:
   ```json
   {
     "registry-mirrors": ["https://registry.docker-cn.com"]
   }
   ```
 
-### 📋 TODO
+## 📋 TODO
 
-- add support for keypoints and obb.
+- Add support for obb and keypoints.
 
 
-## Training
-
-Model training is **not included** in this project. This will probably be added later.
-
-## Contributing
+## 💁 Contributing
 
 Contributions to this project are welcome. To contribute, please submit an issue or pull request.
