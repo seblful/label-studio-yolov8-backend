@@ -12,8 +12,8 @@ services:
       - LOG_LEVEL=${LOG_LEVEL}
 
       # Paths
-      - PYTHONPATH=${PYTHONPATH}
-      - MODEL_DIR=${MODEL_DIR}
+      - PYTHONPATH=/app
+      - MODEL_DIR=./models
       - MODEL_FILENAME=${MODEL_FILENAME}
 
       - LABEL_STUDIO_URL=http://host.docker.internal:${PORT}
