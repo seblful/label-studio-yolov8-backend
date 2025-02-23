@@ -12,30 +12,6 @@ from label_studio_sdk._extensions.label_studio_tools.core.utils.io import get_lo
 
 
 class YOLO(LabelStudioMLBase):
-    def __init__(self,
-                 **kwargs) -> None:
-        super(YOLO, self).__init__(**kwargs)
-
-        # # Task type
-
-        # # From name, to name
-
-    def load_model(self) -> ultralytics.YOLO:
-        model_dir = os.getenv("MODEL_DIR")
-        model_filename = os.getenv("MODEL_FILENAME")
-        model_filepath = os.path.join(model_dir, model_filename)
-        model = ultralytics.YOLO(model_filepath)
-        self.set("model_version", f"yolo-{model.task}")
-
-        return model
-
-    def set_task_type(self) -> None:
-        self.task_type = os.getenv("TASK_TYPE")
-        print(f"Task type is {self.task_type}")
-        assert self.task_type in self.task_types, \
-            f"Task type must be one \
-                of {self.task_types}, set TASK_TYPE in your .env file."
-
     def setup(self) -> None:
         # Task type
         self.task_types = ["detection", "segmentation"]
@@ -46,6 +22,26 @@ class YOLO(LabelStudioMLBase):
         self.labels = self.model.names
         self.from_name = "label"
         self.to_name = "image"
+
+    def set_task_type(self) -> None:
+        self.task_type = os.getenv("TASK_TYPE")
+        assert self.task_type in self.task_types, \
+            f"Task type must be one \
+                of {self.task_types}, set TASK_TYPE in your .env file."
+
+        # Pred func
+        self.pred_funcs = {"detection": self.detect,
+                           "segmentation": self.segment}
+        self.pred_func = self.pred_funcs[self.task_type]
+
+    def load_model(self) -> ultralytics.YOLO:
+        model_dir = os.getenv("MODEL_DIR")
+        model_filename = os.getenv("MODEL_FILENAME")
+        model_filepath = os.path.join(model_dir, model_filename)
+        model = ultralytics.YOLO(model_filepath)
+        self.set("model_version", f"yolo-{model.task}")
+
+        return model
 
     def load_image(self,
                    task: dict) -> Image.Image:
@@ -66,14 +62,11 @@ class YOLO(LabelStudioMLBase):
     def predict(self,
                 tasks: list[dict],
                 **kwargs) -> ModelResponse:
-        if self.task_type == "detection":
-            predictions = self.predict_det(tasks, **kwargs)
-        else:
-            predictions = self.predict_seg(tasks, **kwargs)
+        predictions = self.pred_func(tasks, **kwargs)
 
         return predictions
 
-    def predict_det(self, tasks: list[dict], **kwargs) -> ModelResponse:
+    def detect(self, tasks: list[dict], **kwargs) -> ModelResponse:
         # Create blank list with results
         results = []
 
@@ -134,7 +127,7 @@ class YOLO(LabelStudioMLBase):
 
         return ModelResponse(predictions=predictions)
 
-    def predict_seg(self, tasks: list[dict], **kwargs) -> ModelResponse:
+    def segment(self, tasks: list[dict], **kwargs) -> ModelResponse:
         # Create blank list with results
         results = []
 
